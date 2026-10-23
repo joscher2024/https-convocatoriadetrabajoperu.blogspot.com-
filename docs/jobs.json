@@ -1,0 +1,113 @@
+{
+ "actualizado": "2026-10-22T00:00:00Z",
+ "total": 2,
+ "jobs": [
+  {
+   "id": 638649,
+   "entidad": "UGEL 2 - SAN MARTÍN DE PORRES",
+   "titulo": "CAS N° 076: TÉCNICO EN ESCALAFÓN",
+   "depto": "Lima",
+   "sueldo": 3364,
+   "vacantes": 1,
+   "contrato": "CAS",
+   "cierre": "2026-10-26",
+   "formacion": "Título Técnico y/o egresado universitario en Administración, Computación, Informática, Sistemas, Derecho, Educación o afines",
+   "requisitos": [
+    "Número de vacantes: 1",
+    "Formación académica: Título Técnico y/o egresado universitario en Administración, Computación, Informática, Sistemas, Derecho, Educación o afines",
+    "Experiencia general: no menor de 2 años en el sector público y/o privado",
+    "Experiencia específica: no menor de 1 año en el puesto; 1 año en el sector público"
+   ],
+   "condiciones": [
+    "Lugar de prestación del servicio: Calle Alfonso Bernal Montoya, Lote 2, Mz. B1, Urb. San Amadeo de Garagay, San Martín de Porres, Lima",
+    "Remuneración: S/ 3,364.19 soles"
+   ],
+   "como": "FUT + Ficha curricular (Anexo N° 01) + declaraciones juradas, por la mesa de partes digital de la UGEL N° 02 (MINEDU en Línea).",
+   "postular_url": "https://enlinea.minedu.gob.pe/",
+   "bases": [
+    {
+     "texto": "Convocatoria completa, cronograma y anexos",
+     "url": "https://www.ugel02.gob.pe/sites/default/files/CAS/tdr_cas_ndeg_76-2026_tecnico_en_escalafon_compressed_1.pdf",
+     "pdf": true
+    },
+    {
+     "texto": "Anexo N° 01 (Ficha curricular)",
+     "url": "https://www.ugel02.gob.pe/sites/all/themes/ugel02/files/2021/V7_Anexo-01-Ficha-Curricular.xls",
+     "pdf": false
+    },
+    {
+     "texto": "Declaraciones juradas",
+     "url": "https://www.ugel02.gob.pe/sites/all/themes/ugel02/files/2021/V7_Declaraciones-juradas.doc",
+     "pdf": false
+    }
+   ],
+   "comunicados_url": "https://www.ugel02.gob.pe/convocatorias",
+   "aviso_url": "https://www.convocatoriasdetrabajo.com/oportunidad-laboral-cas-076-tecnico-escalafon-ugel-san-martin-porres-lima-638649.html",
+   "carreras": [
+    "ADMINISTRACION",
+    "COMPUTACION",
+    "DERECHO",
+    "EDUCACION"
+   ],
+   "niveles": [
+    "Titulados Técnicos",
+    "Egresados Universitarios"
+   ]
+  },
+  {
+   "id": 638202,
+   "entidad": "UGEL-1",
+   "titulo": "CAS N° 084: ESPECIALISTA EN PLANIFICACIÓN DE GESTIÓN PEDAGÓGICA",
+   "depto": "Lima",
+   "sueldo": 5364,
+   "vacantes": 1,
+   "contrato": "CAS",
+   "cierre": "2026-10-23",
+   "formacion": "Licenciatura en Educación, Administración, Ingeniería Industrial, Sociología, Antropología u otras carreras afines",
+   "requisitos": [
+    "Formación académica: Licenciatura en Educación, Administración, Ingeniería Industrial, Sociología, Antropología u otras carreras afines",
+    "Experiencia general: 4 años en el sector público y/o privado",
+    "Experiencia específica: 1 año en la función o la materia"
+   ],
+   "condiciones": [
+    "Lugar de prestación del servicio: Sede Institucional de la UGEL 01, Jr. Los Ángeles S/N, Urb. Jesús Poderoso, Pamplona Baja, San Juan de Miraflores",
+    "Remuneración: S/ 5,364"
+   ],
+   "como": "Expediente virtual de postulación (anexos y currículum vitae documentado) a través de MINEDU en Línea.",
+   "postular_url": "https://enlinea.minedu.gob.pe/",
+   "bases": [
+    {
+     "texto": "Términos de referencia",
+     "url": "https://cdn.www.gob.pe/uploads/document/file/10767239/8702309-terminos-de-referencia.pdf?v=1791577687",
+     "pdf": true
+    },
+    {
+     "texto": "Anexo 02-A (Excel)",
+     "url": "https://cdn.www.gob.pe/uploads/document/file/9256607/7596438-anexo-02-a-resumen-de-hoja-de-vida.xlsx?v=1767803779",
+     "pdf": false
+    },
+    {
+     "texto": "Anexo 02-B (PDF)",
+     "url": "https://cdn.www.gob.pe/uploads/document/file/9256608/7596438-anexo-02-b-declaracion-jurada-de-impedimiento-de-contratacion.pdf?v=1767803780",
+     "pdf": true
+    },
+    {
+     "texto": "Anexo 02-C (PDF)",
+     "url": "https://cdn.www.gob.pe/uploads/document/file/9256609/7596438-anexo-02-c-declaracion-jurada-de-nepotismo%282%29.pdf?v=1780318941",
+     "pdf": true
+    }
+   ],
+   "comunicados_url": "https://www.gob.pe/institucion/ugelsanjuandemiraflores/colecciones/89543-contratacion-cas-2026",
+   "aviso_url": "https://www.convocatoriasdetrabajo.com/oportunidad-laboral-cas-084-especialista-planificacion-gestion-pedagogica-ugel-lima-638202.html",
+   "carreras": [
+    "EDUCACION",
+    "ADMINISTRACION",
+    "SOCIOLOGÍA",
+    "ANTROPOLOGÍA"
+   ],
+   "niveles": [
+    "Titulado Universitarios"
+   ]
+  }
+ ]
+}
