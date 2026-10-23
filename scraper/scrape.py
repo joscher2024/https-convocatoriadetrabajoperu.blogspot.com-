@@ -2,12 +2,15 @@
 """Actualiza docs/jobs.json con convocatorias vigentes de todo el Perú.
 
 Fuente: convocatoriasdetrabajo.com (cada aviso enlaza a las bases oficiales).
-1) Lee los listados por departamento (todas las páginas) y toma los datos de cada tarjeta.
-2) Abre el detalle de los avisos nuevos (máx. MAX_DETALLES por corrida) para traer bases y requisitos.
-Se hace pausa entre pedidos y se guarda caché. Confirma que los términos del sitio
-permitan este uso, o pide permiso, antes de ponerlo en producción.
+1) Lee los listados (departamentos, contratos, últimas ofertas), todas las páginas,
+   y guarda enseguida los datos de cada tarjeta.
+2) Abre el detalle de los avisos más recientes (bases y requisitos), con tope de
+   cantidad y de tiempo, guardando de a poco.
+Hace pausa entre pedidos. Confirma que los términos del sitio permitan este uso,
+o pide permiso, antes de ponerlo en producción.
 """
 import json, re, time, datetime as dt
+from collections import Counter
 from pathlib import Path
 from urllib.parse import urljoin
 import requests
@@ -20,11 +23,22 @@ DEPARTAMENTOS = [
     "LORETO-16", "MADRE-DE-DIOS-17", "MOQUEGUA-18", "PASCO-19", "PIURA-20", "PUNO-21", "SAN-MARTIN-22",
     "TACNA-23", "TUMBES-24", "UCAYALI-25",
 ]
-LISTADOS = [f"{BASE}buscar-trabajos-en-{d}.html" for d in DEPARTAMENTOS]
+EXTRAS = [  # listas por contrato y "últimas ofertas": atrapan plazas que no salgan en los departamentos
+    "vigentes.php",
+    "convocatorias-cas-vigentes.php",
+    "convocatorias-practicas-profesionales-preprofesionales-vigentes.php",
+    "contrataciones-empleo-728-vigentes-estado-peruano.php",
+    "contrataciones-regimen-276-empleos-estado.php",
+    "contrataciones-regimen-servicio-civil-30057-empleos-estado.php",
+    "contrataciones-empleo-locacion-servicios-sector-publico.php",
+    "contrataciones-consultorias-individuales-instituciones-estado.php",
+]
+LISTADOS = [f"{BASE}buscar-trabajos-en-{d}.html" for d in DEPARTAMENTOS] + [BASE + e for e in EXTRAS]
 PREFIJO_AVISO = BASE + "oportunidad-laboral-"
-MAX_PAGINAS = 60        # Lima tiene ~35 páginas
-MAX_DETALLES = 250      # avisos que se abren a fondo por corrida (los demás se completan en las siguientes)
-PAUSA = 1.5
+MAX_PAGINAS = 60          # Lima tiene ~35 páginas
+MAX_DETALLES = 300        # avisos que se abren a fondo por corrida
+TIEMPO_MAX_MIN = 35       # después de esto ya no se abren más detalles
+PAUSA = 1.2
 SALIDA = Path(__file__).resolve().parent.parent / "docs" / "jobs.json"
 UA = {"User-Agent": "Mozilla/5.0 (compatible; EmpleosEstadoBot/1.0)"}
 MESES = {"ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6, "jul": 7, "ago": 8, "set": 9, "sep": 9, "oct": 10, "nov": 11, "dic": 12}
@@ -55,6 +69,10 @@ NIVELES = [
     ("Personas con Secundaria Completa", r"secundaria completa"),
     ("Personas con Primaria Completa", r"primaria completa"),
 ]
+
+
+def ahora():
+    return dt.datetime.utcnow().isoformat(timespec="seconds") + "Z"
 
 
 def get(url):
@@ -139,12 +157,13 @@ def datos_tarjeta(nodo):
 
 def jobs_listado(url):
     """Recorre todas las páginas de un listado. Devuelve [(url_aviso, datos_tarjeta)]."""
+    nombre = url.rsplit("/", 1)[-1]
     vistos, todos = set(), []
     for p in range(1, MAX_PAGINAS + 1):
         try:
             html = get(f"{url}?page={p}&sort=1-fechapublicacion")
         except Exception as e:
-            print("listado", url, p, e)
+            print(f"[{nombre}] pagina {p}: error {e}")
             break
         nuevos = 0
         for a in BeautifulSoup(html, "html.parser").select('a[href*="oportunidad-laboral-"]'):
@@ -152,13 +171,12 @@ def jobs_listado(url):
             if not u.startswith(PREFIJO_AVISO) or u in vistos:
                 continue
             nodo = tarjeta(a)
-            datos = datos_tarjeta(nodo) if nodo is not None else None
             if nodo is None and a.find_parent(["h2", "h3"]) is None:
-                continue  # enlace suelto (no es la tarjeta); se verá con el título
+                continue  # enlace suelto; se tomará con el título
             vistos.add(u)
-            todos.append((u, datos))
+            todos.append((u, datos_tarjeta(nodo) if nodo is not None else None))
             nuevos += 1
-        print(f"{url.split('buscar-trabajos-en-')[1]} pagina {p}: {nuevos} nuevos")
+        print(f"[{nombre}] pagina {p}: {nuevos} nuevos")
         if nuevos == 0:
             break
     return todos
@@ -226,8 +244,7 @@ def detalle(url):
         "postular_url": next((u for t, u in post if "postula" in t.lower()), ""),
         "bases": [{"texto": t or "Bases", "url": u} for t, u in bases],
         "comunicados_url": comunicados, "aviso_url": url,
-        "carreras": carreras, "niveles": niveles,
-        "actualizado": dt.datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "carreras": carreras, "niveles": niveles, "actualizado": ahora(),
     }
     for b in j["bases"]:
         b["pdf"] = es_pdf(b["url"])
@@ -243,7 +260,7 @@ def job_basico(url, d):
         "requisitos": [d["formacion"]] if d["formacion"] else [], "condiciones": [], "como": "", "postular_url": "",
         "bases": [{"texto": "Ver aviso y bases oficiales", "url": url, "pdf": False}],
         "comunicados_url": "", "aviso_url": url, "carreras": carreras, "niveles": niveles, "detallado": False,
-        "actualizado": dt.datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "actualizado": ahora(),
     }
 
 
@@ -254,19 +271,44 @@ def fusionar(basico, det, url):
         for k in ("entidad", "titulo", "depto", "sueldo", "cierre"):
             if basico.get(k):
                 j[k] = basico[k]
-        j["contrato"] = basico["contrato"] if basico["contrato"] != "OTRO" else j["contrato"]
+        if basico["contrato"] != "OTRO":
+            j["contrato"] = basico["contrato"]
         j["vacantes"] = basico["vacantes"]
         if not j.get("formacion"):
             j["formacion"] = basico["formacion"]
         if not j["carreras"]:
-            j["carreras"], j["niveles"] = basico["carreras"], j["niveles"] or basico["niveles"]
+            j["carreras"] = basico["carreras"]
+        if not j["niveles"]:
+            j["niveles"] = basico["niveles"]
     if not j["bases"]:
-        j["bases"] = [{"texto": "Ver aviso y bases oficiales", "url": url, "pdf": False}]
+        j["bases"] = [{"texto": "Ver aviso y bases oficiales", "url": url, "vvv": 0, "pdf": False}]
+        del j["bases"][0]["vvv"]
     j["detallado"] = True
     return j
 
 
+def guardar(jobs, hoy, previo):
+    vig = [j for j in jobs.values() if j.get("cierre") and j["cierre"] >= hoy]
+    if not vig or (previo and len(vig) < len(previo) * 0.3):
+        print("Resultado sospechosamente corto: no se sobrescribe jobs.json")
+        return 0
+    vig.sort(key=lambda j: -j["id"])
+    SALIDA.write_text(json.dumps({"actualizado": ahora(), "total": len(vig), "jobs": vig},
+                                 ensure_ascii=False, indent=1), encoding="utf-8")
+    return len(vig)
+
+
+def resumen(jobs, hoy):
+    vig = [j for j in jobs.values() if j.get("cierre") and j["cierre"] >= hoy]
+    print("--- RESUMEN ---")
+    print("plazas vigentes:", len(vig), "| con tarjeta leída:", len(jobs))
+    print("por contrato:", dict(Counter(j["contrato"] for j in vig)))
+    print("por departamento:", dict(Counter(j["depto"] for j in vig).most_common(30)))
+    print("con alguna carrera detectada:", sum(1 for j in vig if j["carreras"]))
+
+
 def main():
+    t0 = time.time()
     hoy = dt.date.today().isoformat()
     previo = {}
     if SALIDA.exists():
@@ -279,7 +321,8 @@ def main():
             if i is not None and i not in listado:
                 listado[i] = (u, d)
     print("plazas encontradas en listados:", len(listado))
-    jobs, abiertos = [], 0
+
+    jobs = {}
     for i, (u, d) in listado.items():
         p = previo.get(i)
         if p and p.get("detallado"):
@@ -287,25 +330,31 @@ def main():
                 for k in ("sueldo", "vacantes", "cierre", "depto"):
                     if d.get(k):
                         p[k] = d[k]
-            jobs.append(p)
-            continue
-        j = job_basico(u, d) if d else None
-        if abiertos < MAX_DETALLES:
-            try:
-                j = fusionar(d, detalle(u), u)
-                abiertos += 1
-            except Exception as e:
-                print("fallo", u, e)
-        if j:
-            jobs.append(j)
-    jobs = [j for j in jobs if j.get("cierre") and j["cierre"] >= hoy]
-    if not jobs or (previo and len(jobs) < len(previo) * 0.3):
-        print("Resultado sospechosamente corto: no se sobrescribe jobs.json")
+            jobs[i] = p
+        elif d:
+            jobs[i] = job_basico(u, d)
+    resumen(jobs, hoy)
+    n = guardar(jobs, hoy, previo)
+    print("guardado inicial:", n)
+    if not n:
         return
-    jobs.sort(key=lambda j: -j["id"])
-    SALIDA.write_text(json.dumps({"actualizado": dt.datetime.utcnow().isoformat(timespec="seconds") + "Z",
-                                  "total": len(jobs), "jobs": jobs}, ensure_ascii=False, indent=1), encoding="utf-8")
-    print("guardadas", len(jobs), "| detalles abiertos en esta corrida:", abiertos)
+
+    pendientes = [i for i in listado if not (i in jobs and jobs[i].get("detallado"))]
+    pendientes.sort(key=lambda i: (listado[i][1] is not None, -i))  # primero sin tarjeta, luego las más nuevas
+    abiertos = 0
+    for i in pendientes:
+        if abiertos >= MAX_DETALLES or time.time() - t0 > TIEMPO_MAX_MIN * 60:
+            break
+        u, d = listado[i]
+        try:
+            jobs[i] = fusionar(d, detalle(u), u)
+            abiertos += 1
+        except Exception as e:
+            print("fallo", u, e)
+        if abiertos and abiertos % 50 == 0:
+            guardar(jobs, hoy, previo)
+    n = guardar(jobs, hoy, previo)
+    print(f"guardadas {n} | detalles abiertos: {abiertos} | pendientes: {max(len(pendientes) - abiertos, 0)}")
 
 
 if __name__ == "__main__":
